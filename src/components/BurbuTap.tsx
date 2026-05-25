@@ -10,7 +10,9 @@ import { playPop, playComboUp, playMiss, playStart, playEnd, playTick, playGold,
 const GAME_DURATION     = 45_000;
 const SPAWN_START       = 460;   // ms — rápido desde el inicio
 const SPAWN_END         = 120;   // ms — frenético al final
-const REWARD_THRESHOLD  = 5_000; // pts para reclamar recompensa
+const REWARD_THRESHOLD  = 7_500; // pts para reclamar recompensa
+const PLAYED_KEY        = 'burbutap_played';
+const SCORE_KEY         = 'burbutap_score';
 
 const FUN_FACTS = [
   'Postobón fue fundada en 1904 en Medellín — más de 120 años refrescando Colombia.',
@@ -34,7 +36,7 @@ function getMultiplier(combo: number, frenzyActive = false): number {
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
-type GamePhase = 'intro' | 'countdown' | 'playing' | 'end';
+type GamePhase = 'intro' | 'countdown' | 'playing' | 'end' | 'blocked';
 type BubbleType = 'normal' | 'gold' | 'bomb' | 'ice';
 
 interface Bubble {
@@ -137,7 +139,7 @@ function LeaderboardPanel({ entries, loading, error, className }: {
 interface Props { onClose: () => void; }
 
 export default function BurbuTap({ onClose }: Props) {
-  const [phase, setPhase]               = useState<GamePhase>('intro');
+  const [phase, setPhase]               = useState<GamePhase>(() => localStorage.getItem(PLAYED_KEY) ? 'blocked' : 'intro');
   const [bubbles, setBubbles]           = useState<Bubble[]>([]);
   const [score, setScore]               = useState(0);
   const [combo, setCombo]               = useState(0);
@@ -222,6 +224,8 @@ export default function BurbuTap({ onClose }: Props) {
     stopMusic();
     setFinalScore(s);
     setBubbles([]);
+    localStorage.setItem(PLAYED_KEY, '1');
+    localStorage.setItem(SCORE_KEY, String(s));
     setPhase('end');
   }, []);
 
@@ -536,6 +540,52 @@ export default function BurbuTap({ onClose }: Props) {
       </button>
 
       <AnimatePresence mode="wait">
+
+        {/* ── BLOCKED ────────────────────────────────────────────────────── */}
+        {phase === 'blocked' && (
+          <motion.div
+            key="blocked"
+            className="flex flex-col items-center justify-center h-full px-6 text-center"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <motion.div
+              className="text-6xl mb-5"
+              animate={{ rotate: [0, -8, 8, -4, 4, 0] }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+            >
+              🔒
+            </motion.div>
+
+            <h2 className="font-display font-bold text-white mb-2" style={{ fontSize: 'clamp(1.6rem, 8vw, 2.4rem)' }}>
+              Ya participaste
+            </h2>
+            <p className="text-white/40 text-sm max-w-xs mb-2 leading-relaxed">
+              Cada dispositivo tiene un solo intento en el stand.
+            </p>
+
+            {(() => {
+              const prev = localStorage.getItem(SCORE_KEY);
+              return prev ? (
+                <motion.p
+                  className="text-postobon-red font-bold text-2xl mb-6"
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: 'spring', stiffness: 220, damping: 14 }}
+                >
+                  Tu puntaje: {Number(prev).toLocaleString()} pts
+                </motion.p>
+              ) : <div className="mb-6" />;
+            })()}
+
+            <LeaderboardPanel entries={leaderboard} loading={lbLoading} error={lbError} className="w-full max-w-xs mb-6" />
+
+            <button onClick={onClose} className="text-white/22 text-xs py-2 hover:text-white/50 transition-colors cursor-pointer">
+              Volver al inicio
+            </button>
+          </motion.div>
+        )}
 
         {/* ── INTRO ──────────────────────────────────────────────────────── */}
         {phase === 'intro' && (
@@ -1191,14 +1241,13 @@ export default function BurbuTap({ onClose }: Props) {
                   {copied ? '¡Copiado!' : 'Compartir'}
                 </button>
               )}
-              <button
-                onClick={() => setPhase('countdown')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #E30613, #b0000b)', boxShadow: '0 4px 18px rgba(227,6,19,0.38)' }}
+              <div
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-white/30"
+                style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
               >
                 <RefreshCw size={13} />
-                {finalScore > 0 ? 'Jugar de nuevo' : '¡Jugar!'}
-              </button>
+                Solo un intento
+              </div>
 
             </div>
 
