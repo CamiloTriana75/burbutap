@@ -6,8 +6,34 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
+  doc,
+  setDoc,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+
+const DEVICES_COL = 'burbutap_devices';
+const DEVICE_ID_KEY = 'burbutap_device_id';
+
+export function getDeviceId(): string {
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+/** Marca este dispositivo como "ya jugó" en Firestore. */
+export async function registerDevice(deviceId: string): Promise<void> {
+  await setDoc(doc(db, DEVICES_COL, deviceId), { playedAt: serverTimestamp() });
+}
+
+/** Devuelve true si el dispositivo tiene registro en Firestore. */
+export async function checkDevice(deviceId: string): Promise<boolean> {
+  const snap = await getDoc(doc(db, DEVICES_COL, deviceId));
+  return snap.exists();
+}
 
 export interface ScoreEntry {
   name:  string;

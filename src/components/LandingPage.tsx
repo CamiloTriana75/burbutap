@@ -4,9 +4,8 @@ import { Trophy, Flame, Zap, Timer, RotateCcw, Users } from 'lucide-react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 
 const REWARD_THRESHOLD = 7_500;
-const PLAYED_KEY = 'burbutap_played';
 
-interface Props { onPlay: () => void; }
+interface Props { onPlay: () => void; hasPlayed: boolean; }
 
 function AnimatedScore({ value }: { value: number }) {
   const count = useMotionValue(0);
@@ -18,9 +17,8 @@ function AnimatedScore({ value }: { value: number }) {
   return <motion.span>{rounded}</motion.span>;
 }
 
-export default function LandingPage({ onPlay }: Props) {
+export default function LandingPage({ onPlay, hasPlayed }: Props) {
   const { entries, loading } = useLeaderboard();
-  const hasPlayed = !!localStorage.getItem(PLAYED_KEY);
   const topScore = entries[0]?.score ?? 0;
   const progressPct = Math.min(100, Math.round((topScore / REWARD_THRESHOLD) * 100));
 
@@ -137,6 +135,45 @@ export default function LandingPage({ onPlay }: Props) {
               {chip.icon}{chip.label}
             </span>
           ))}
+        </motion.div>
+
+        {/* Bubble tutorial */}
+        <motion.div
+          className="w-full max-w-sm mb-5"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.42, duration: 0.4 }}
+        >
+          <p className="text-white/25 text-[9px] uppercase tracking-widest font-semibold text-center mb-3">Tipos de burbujas</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { bg: 'radial-gradient(circle at 32% 28%, rgba(255,115,115,0.98), rgba(227,6,19,0.86) 55%, rgba(160,0,8,0.95))', border: 'rgba(255,190,190,0.28)', glow: 'rgba(227,6,19,0.35)', icon: null, label: 'Normal', desc: 'Puntos base' },
+              { bg: 'radial-gradient(circle at 32% 28%, #ffe066, #f5c842 55%, #c8950a)', border: 'rgba(255,220,80,0.75)', glow: 'rgba(245,200,66,0.5)', icon: '⭐', label: 'Dorada', desc: '×3 puntos' },
+              { bg: 'radial-gradient(circle at 32% 28%, #555, #1a0000 55%, #0a0000)', border: 'rgba(255,60,60,0.55)', glow: 'rgba(255,30,30,0.35)', icon: '💣', label: 'Bomba', desc: '−5s · ¡Evítala!' },
+              { bg: 'radial-gradient(circle at 32% 28%, #d4f4ff, rgba(80,170,255,0.92) 55%, rgba(0,90,200,0.95))', border: 'rgba(140,220,255,0.65)', glow: 'rgba(100,190,255,0.5)', icon: '❄️', label: 'Hielo', desc: 'Congela 3s' },
+            ] as const).map(b => (
+              <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '8px 10px' }}>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: b.bg, border: `1.5px solid ${b.border}`, boxShadow: `0 0 10px ${b.glow}`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  {b.icon
+                    ? <span style={{ fontSize: 15 }}>{b.icon}</span>
+                    : <img src="/postobon-seeklogo.png" alt="" style={{ width: '68%', height: '68%', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.8 }} />
+                  }
+                </div>
+                <div>
+                  <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12, fontWeight: 600, margin: 0, lineHeight: 1.2 }}>{b.label}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, margin: 0 }}>{b.desc}</p>
+                </div>
+              </div>
+            ))}
+            {/* Frenzy — full width */}
+            <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,100,0,0.06)', border: '1px solid rgba(255,100,0,0.18)', borderRadius: 12, padding: '8px 10px' }}>
+              <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>⚡</div>
+              <div>
+                <p style={{ color: 'rgba(255,160,60,0.9)', fontSize: 12, fontWeight: 600, margin: 0, lineHeight: 1.2 }}>Modo Frenesí</p>
+                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, margin: 0 }}>Combo 10 → ×4 puntos por 4 segundos</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Ranking global */}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Share2, RefreshCw, Flame } from 'lucide-react';
-import { addScore } from '../utils/leaderboard';
+import { addScore, registerDevice, getDeviceId } from '../utils/leaderboard';
 import type { ScoreEntry } from '../utils/leaderboard';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { playPop, playComboUp, playMiss, playStart, playEnd, playTick, playGold, playBomb, playIce, playFrenzy, startMusic, stopMusic, setMusicBPM } from '../utils/sounds';
@@ -227,6 +227,7 @@ export default function BurbuTap({ onClose }: Props) {
     setBubbles([]);
     localStorage.setItem(PLAYED_KEY, '1');
     localStorage.setItem(SCORE_KEY, String(s));
+    void registerDevice(getDeviceId());
     setPhase('end');
   }, []);
 
