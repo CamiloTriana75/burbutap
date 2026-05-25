@@ -161,6 +161,7 @@ export default function BurbuTap({ onClose }: Props) {
 
   const [frozen, setFrozen]         = useState(false);
   const frozenRef                   = useRef(false);
+  const frozenAtRef                 = useRef(0);
   const frozenTimeoutRef            = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTimeRef    = useRef(0);
@@ -316,23 +317,26 @@ export default function BurbuTap({ onClose }: Props) {
 
     // Countdown rAF + tick SFX
     function tick() {
-      const remaining = Math.max(0, GAME_DURATION - (Date.now() - startTimeRef.current));
-      const now = performance.now();
-      if (now - lastTimeStateRef.current >= 100) {
-        lastTimeStateRef.current = now;
-        setTimeLeft(remaining);
+      if (!frozenRef.current) {
+        const remaining = Math.max(0, GAME_DURATION - (Date.now() - startTimeRef.current));
+        const now = performance.now();
+        if (now - lastTimeStateRef.current >= 100) {
+          lastTimeStateRef.current = now;
+          setTimeLeft(remaining);
+        }
+        const elapsedMs = GAME_DURATION - remaining;
+        const targetBPM = elapsedMs < 15_000 ? 135
+                        : elapsedMs < 35_000 ? Math.round(135 + ((elapsedMs - 15_000) / 20_000) * 25)
+                        : 160;
+        setMusicBPM(frenzyRef.current ? 175 : targetBPM);
+        const sec = Math.ceil(remaining / 1000);
+        if (remaining < 6000 && remaining > 0 && sec !== lastTickSecRef.current) {
+          lastTickSecRef.current = sec;
+          playTick();
+        }
+        if (remaining <= 0 && phaseRef.current === 'playing') return; // endGame via scheduleSpawn
       }
-      const elapsedMs = GAME_DURATION - remaining;
-      const targetBPM = elapsedMs < 15_000 ? 135
-                      : elapsedMs < 35_000 ? Math.round(135 + ((elapsedMs - 15_000) / 20_000) * 25)
-                      : 160;
-      setMusicBPM(frenzyRef.current ? 175 : targetBPM);
-      const sec = Math.ceil(remaining / 1000);
-      if (remaining < 6000 && remaining > 0 && sec !== lastTickSecRef.current) {
-        lastTickSecRef.current = sec;
-        playTick();
-      }
-      if (remaining > 0 && phaseRef.current === 'playing')
+      if (phaseRef.current === 'playing')
         rafRef.current = requestAnimationFrame(tick);
     }
     rafRef.current = requestAnimationFrame(tick);
@@ -374,7 +378,7 @@ export default function BurbuTap({ onClose }: Props) {
     // ── Bomb: penalty, no points ─────────────────────────────────────────────
     if (bubble.type === 'bomb') {
       setBubbles(prev => prev.filter(b => b.id !== bubble.id));
-      startTimeRef.current += 5_000;
+      startTimeRef.current -= 5_000;
       const had = comboRef.current;
       comboRef.current = 0;
       setCombo(0);
@@ -394,7 +398,8 @@ export default function BurbuTap({ onClose }: Props) {
     // ── Ice: freeze, no points ────────────────────────────────────────────────
     if (bubble.type === 'ice') {
       setBubbles(prev => prev.filter(b => b.id !== bubble.id));
-      frozenRef.current = true;
+      frozenAtRef.current  = Date.now();
+      frozenRef.current    = true;
       setFrozen(true);
       playIce();
 
@@ -404,10 +409,11 @@ export default function BurbuTap({ onClose }: Props) {
 
       if (frozenTimeoutRef.current) clearTimeout(frozenTimeoutRef.current);
       frozenTimeoutRef.current = setTimeout(() => {
-        startTimeRef.current += 2000;
-        frozenRef.current = false;
+        // compensate with exact frozen duration so the timer is truly paused
+        startTimeRef.current += Date.now() - frozenAtRef.current;
+        frozenRef.current    = false;
         setFrozen(false);
-      }, 2000);
+      }, 3000);
       return;
     }
 
