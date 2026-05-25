@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Trophy, Flame, Zap, Timer, RotateCcw } from 'lucide-react';
+import { useMemo, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { Trophy, Flame, Zap, Timer, RotateCcw, Users } from 'lucide-react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 
 const REWARD_THRESHOLD = 7_500;
@@ -8,9 +8,21 @@ const PLAYED_KEY = 'burbutap_played';
 
 interface Props { onPlay: () => void; }
 
+function AnimatedScore({ value }: { value: number }) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, v => Math.round(v).toLocaleString());
+  useEffect(() => {
+    const controls = animate(count, value, { duration: 1.6, ease: 'easeOut', delay: 0.6 });
+    return controls.stop;
+  }, [value]);
+  return <motion.span>{rounded}</motion.span>;
+}
+
 export default function LandingPage({ onPlay }: Props) {
   const { entries, loading } = useLeaderboard();
   const hasPlayed = !!localStorage.getItem(PLAYED_KEY);
+  const topScore = entries[0]?.score ?? 0;
+  const progressPct = Math.min(100, Math.round((topScore / REWARD_THRESHOLD) * 100));
 
   const bubbles = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -30,22 +42,12 @@ export default function LandingPage({ onPlay }: Props) {
       {/* Floating bubbles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         {bubbles.map(b => (
-          <div
-            key={b.id}
-            className="absolute rounded-full bg-postobon-red"
-            style={{
-              left: b.left, bottom: '-20px',
-              width: b.size, height: b.size,
-              opacity: b.opacity,
-              animation: `float-up ${b.duration} ${b.delay} infinite linear`,
-            }}
+          <div key={b.id} className="absolute rounded-full bg-postobon-red"
+            style={{ left: b.left, bottom: '-20px', width: b.size, height: b.size, opacity: b.opacity, animation: `float-up ${b.duration} ${b.delay} infinite linear` }}
           />
         ))}
       </div>
-
-      {/* Radial glow center */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+      <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 60%, rgba(227,6,19,0.08) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
@@ -53,10 +55,8 @@ export default function LandingPage({ onPlay }: Props) {
       <div className="relative z-10 flex flex-col items-center text-center px-6 pt-14 pb-16 flex-1">
 
         {/* Logo */}
-        <motion.div
-          className="mb-6"
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <motion.div className="mb-6"
+          initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, type: 'spring', stiffness: 200, damping: 16 }}
         >
           <div className="relative inline-block">
@@ -77,10 +77,8 @@ export default function LandingPage({ onPlay }: Props) {
         </motion.div>
 
         {/* Eyebrow */}
-        <motion.div
-          className="flex items-center gap-2 mb-3"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+        <motion.div className="flex items-center gap-2 mb-3"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
         >
           <div className="h-px w-7 bg-postobon-red opacity-50" />
@@ -92,19 +90,14 @@ export default function LandingPage({ onPlay }: Props) {
         <motion.h1
           className="font-display font-bold leading-tight mb-2"
           style={{ fontSize: 'clamp(2.2rem, 10vw, 4rem)', color: '#ffffff' }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          Burbu-Tap
-          <br />
-          <span style={{ color: '#E30613' }}>Challenge</span>
+          Burbu-Tap<br /><span style={{ color: '#E30613' }}>Challenge</span>
         </motion.h1>
 
-        <motion.p
-          className="text-white/45 text-sm max-w-xs mb-6 leading-relaxed"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <motion.p className="text-white/45 text-sm max-w-xs mb-6 leading-relaxed"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
         >
           Toca burbujas, encadena hits y multiplica tu puntaje.<br />
@@ -114,13 +107,8 @@ export default function LandingPage({ onPlay }: Props) {
         {/* Reward card */}
         <motion.div
           className="w-full max-w-sm rounded-2xl px-5 py-4 mb-5 text-center"
-          style={{
-            background: 'linear-gradient(135deg, #1a1000, #2d1e00)',
-            border: '1.5px solid rgba(245,200,66,0.38)',
-            boxShadow: '0 4px 28px rgba(245,200,66,0.1)',
-          }}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          style={{ background: 'linear-gradient(135deg, #1a1000, #2d1e00)', border: '1.5px solid rgba(245,200,66,0.38)', boxShadow: '0 4px 28px rgba(245,200,66,0.1)' }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.45 }}
         >
           <p className="text-yellow-400 font-bold text-base mb-1">🏆 Reto del stand</p>
@@ -131,10 +119,8 @@ export default function LandingPage({ onPlay }: Props) {
         </motion.div>
 
         {/* Feature chips */}
-        <motion.div
-          className="flex flex-wrap justify-center gap-2 mb-5"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
+        <motion.div className="flex flex-wrap justify-center gap-2 mb-5"
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
         >
           {[
@@ -144,69 +130,117 @@ export default function LandingPage({ onPlay }: Props) {
             { icon: <Zap size={11} />, label: 'Burbujas especiales' },
             { icon: <RotateCcw size={11} />, label: 'Solo 1 intento' },
           ].map(chip => (
-            <span
-              key={chip.label}
+            <span key={chip.label}
               className="inline-flex items-center gap-1.5 text-white/45 text-xs px-3 py-1.5 rounded-full font-medium"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
             >
-              {chip.icon}
-              {chip.label}
+              {chip.icon}{chip.label}
             </span>
           ))}
         </motion.div>
 
         {/* Ranking global */}
-        <motion.div
-          className="w-full max-w-sm mb-7"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+        <motion.div className="w-full max-w-sm mb-2"
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.45 }}
         >
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Trophy size={11} className="text-postobon-red" />
-            <p className="text-white/35 text-[9px] uppercase tracking-widest font-semibold">Ranking global</p>
-            {!loading && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" title="En vivo" />}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Trophy size={11} className="text-postobon-red" />
+              <p className="text-white/35 text-[9px] uppercase tracking-widest font-semibold">Ranking global</p>
+              {!loading && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />}
+            </div>
+            {!loading && entries.length > 0 && (
+              <div className="flex items-center gap-1 text-white/25 text-[9px]">
+                <Users size={9} />
+                <span>{entries.length} participante{entries.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
           </div>
 
           {loading && <p className="text-white/25 text-xs text-center py-4">Cargando ranking…</p>}
-
           {!loading && entries.length === 0 && (
             <p className="text-white/20 text-xs text-center py-4">¡Sé el primero en el ranking! 🫧</p>
           )}
 
           {!loading && entries.length > 0 && (
-            <div className="space-y-1.5">
-              {entries.slice(0, 10).map((entry, i) => (
-                <motion.div
-                  key={entry.name + entry.score + i}
-                  className="flex items-center justify-between px-4 py-2 rounded-xl"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.05, duration: 0.28 }}
-                  style={{
-                    background: i === 0 ? 'rgba(227,6,19,0.13)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${i === 0 ? 'rgba(227,6,19,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs w-5 text-center">
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span className="text-white/25 font-mono">{i + 1}</span>}
-                    </span>
-                    <span className="text-white/80 text-sm truncate max-w-[140px]">{entry.name}</span>
+            <>
+              {/* ── Top 1 hero card ── */}
+              <motion.div
+                className="rounded-2xl px-4 py-3 mb-2 relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, rgba(227,6,19,0.18), rgba(180,0,0,0.1))', border: '1.5px solid rgba(227,6,19,0.4)', boxShadow: '0 4px 24px rgba(227,6,19,0.15)' }}
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.55, duration: 0.4, type: 'spring', stiffness: 200 }}
+              >
+                {/* Glare */}
+                <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '-120%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)', animation: 'glare-sweep 3.5s ease 1s infinite', pointerEvents: 'none' }} />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-lg flex-shrink-0">🥇</span>
+                    <div className="min-w-0 text-left">
+                      <p className="text-white font-bold text-sm leading-tight break-words">{entries[0].name}</p>
+                      <p className="text-postobon-red/70 text-[10px]">Líder actual</p>
+                    </div>
                   </div>
-                  <span className="text-white font-bold text-sm font-mono">{entry.score.toLocaleString()}</span>
-                </motion.div>
-              ))}
-            </div>
+                  <div className="text-right flex-shrink-0 ml-3">
+                    <p className="text-postobon-red font-bold text-xl font-mono tabular-nums">
+                      <AnimatedScore value={entries[0].score} />
+                    </p>
+                    <p className="text-white/30 text-[9px]">pts</p>
+                  </div>
+                </div>
+
+                {/* Progress bar toward reward */}
+                <div className="mt-3">
+                  <div className="flex justify-between text-[9px] mb-1">
+                    <span className="text-white/30">Progreso al premio</span>
+                    <span className={progressPct >= 100 ? 'text-yellow-400 font-bold' : 'text-white/35'}>
+                      {progressPct >= 100 ? '✓ Premio alcanzado' : `${progressPct}% de ${REWARD_THRESHOLD.toLocaleString()} pts`}
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: progressPct >= 100 ? 'linear-gradient(90deg, #c8950a, #f5c842)' : 'linear-gradient(90deg, #E30613, #ff4545)' }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ delay: 0.9, duration: 1.2, ease: 'easeOut' }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Rest of ranking */}
+              <div className="space-y-1.5">
+                {entries.slice(1, 10).map((entry, i) => (
+                  <motion.div
+                    key={entry.name + entry.score + i}
+                    className="flex items-center justify-between px-4 py-2 rounded-xl"
+                    initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + i * 0.05, duration: 0.25 }}
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span className="text-xs w-5 text-center flex-shrink-0">
+                        {i === 0 ? '🥈' : i === 1 ? '🥉' : <span className="text-white/25 font-mono">{i + 2}</span>}
+                      </span>
+                      <span className="text-white/75 text-sm break-words text-left">{entry.name}</span>
+                    </div>
+                    <span className="text-white/80 font-bold text-sm font-mono tabular-nums flex-shrink-0 ml-3">{entry.score.toLocaleString()}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </>
           )}
         </motion.div>
 
         {/* CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.45 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-sm mt-6"
         >
           {hasPlayed ? (
             <div className="w-full py-4 rounded-2xl text-center font-bold text-white/30 text-lg"
@@ -217,35 +251,20 @@ export default function LandingPage({ onPlay }: Props) {
             <motion.button
               onClick={onPlay}
               className="relative overflow-hidden w-full font-bold text-white py-5 rounded-2xl text-xl cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #E30613 0%, #b0000b 100%)',
-                boxShadow: '0 12px 48px rgba(227,6,19,0.55), 0 4px 14px rgba(0,0,0,0.4)',
-              }}
+              style={{ background: 'linear-gradient(135deg, #E30613 0%, #b0000b 100%)', boxShadow: '0 12px 48px rgba(227,6,19,0.55), 0 4px 14px rgba(0,0,0,0.4)' }}
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.7 }}
               whileTap={{ scale: 0.95 }}
               aria-label="Jugar Burbu-Tap Challenge"
             >
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute', top: 0, left: '-120%',
-                  width: '70%', height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
-                  animation: 'glare-sweep 2.6s ease 1.2s infinite',
-                  pointerEvents: 'none',
-                }}
-              />
+              <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: '-120%', width: '70%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)', animation: 'glare-sweep 2.6s ease 1.2s infinite', pointerEvents: 'none' }} />
               🫧 ¡Jugar ahora!
             </motion.button>
           )}
         </motion.div>
 
-        <motion.p
-          className="mt-4 text-white/20 text-[10px] tracking-wide"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.65 }}
+        <motion.p className="mt-4 text-white/20 text-[10px] tracking-wide"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65 }}
         >
           Gratis · Sin registro · Sonido activable · 1 intento por dispositivo
         </motion.p>
