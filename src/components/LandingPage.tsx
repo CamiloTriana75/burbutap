@@ -10,7 +10,6 @@ interface Props { onPlay: () => void; }
 
 export default function LandingPage({ onPlay }: Props) {
   const { entries, loading } = useLeaderboard();
-  const topEntry = entries[0] ?? null;
   const hasPlayed = !!localStorage.getItem(PLAYED_KEY);
 
   const bubbles = useMemo(() =>
@@ -156,24 +155,49 @@ export default function LandingPage({ onPlay }: Props) {
           ))}
         </motion.div>
 
-        {/* Live record */}
+        {/* Ranking global */}
         <motion.div
-          className="flex items-center gap-2 mb-7 px-4 py-2 rounded-full"
-          style={{ background: 'rgba(227,6,19,0.08)', border: '1px solid rgba(227,6,19,0.2)', minHeight: 36 }}
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.45, duration: 0.35 }}
+          className="w-full max-w-sm mb-7"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.45 }}
         >
-          <Trophy size={11} className="text-postobon-red" />
-          {loading && <span className="text-white/35 text-xs">Cargando récord…</span>}
-          {!loading && !topEntry && <span className="text-white/35 text-xs">¡Sé el primero en el ranking!</span>}
-          {!loading && topEntry && (
-            <>
-              <span className="text-white/45 text-xs">Récord:</span>
-              <span className="text-postobon-red font-bold text-sm">{topEntry.score.toLocaleString()} pts</span>
-              <span className="text-white/35 text-xs">por {topEntry.name}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse ml-1" title="En vivo" />
-            </>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Trophy size={11} className="text-postobon-red" />
+            <p className="text-white/35 text-[9px] uppercase tracking-widest font-semibold">Ranking global</p>
+            {!loading && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" title="En vivo" />}
+          </div>
+
+          {loading && <p className="text-white/25 text-xs text-center py-4">Cargando ranking…</p>}
+
+          {!loading && entries.length === 0 && (
+            <p className="text-white/20 text-xs text-center py-4">¡Sé el primero en el ranking! 🫧</p>
+          )}
+
+          {!loading && entries.length > 0 && (
+            <div className="space-y-1.5">
+              {entries.slice(0, 10).map((entry, i) => (
+                <motion.div
+                  key={entry.name + entry.score + i}
+                  className="flex items-center justify-between px-4 py-2 rounded-xl"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + i * 0.05, duration: 0.28 }}
+                  style={{
+                    background: i === 0 ? 'rgba(227,6,19,0.13)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${i === 0 ? 'rgba(227,6,19,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs w-5 text-center">
+                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span className="text-white/25 font-mono">{i + 1}</span>}
+                    </span>
+                    <span className="text-white/80 text-sm truncate max-w-[140px]">{entry.name}</span>
+                  </div>
+                  <span className="text-white font-bold text-sm font-mono">{entry.score.toLocaleString()}</span>
+                </motion.div>
+              ))}
+            </div>
           )}
         </motion.div>
 
