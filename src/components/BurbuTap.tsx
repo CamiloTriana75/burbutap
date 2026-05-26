@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Share2, RefreshCw, Flame } from 'lucide-react';
 import { addScore, registerDevice, getDeviceId } from '../utils/leaderboard';
-// @ts-expect-error - Imports kept for potential future use
 import { getTier, getBadges } from '../utils/tiers';
-import type { BadgeResult } from '../utils/tiers';
+import type { BadgeStats, BadgeResult } from '../utils/tiers';
 import type { ScoreEntry } from '../utils/leaderboard';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { playPop, playComboUp, playMiss, playStart, playEnd, playTick, playGold, playBomb, playIce, playFrenzy, startMusic, stopMusic, setMusicBPM } from '../utils/sounds';
@@ -123,13 +122,18 @@ function LeaderboardPanel({ entries, loading, error, className }: {
                 border: `1px solid ${i === 0 ? 'rgba(227,6,19,0.3)' : 'rgba(255,255,255,0.07)'}`,
               }}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-xs w-5 text-center">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <span className="text-xs w-5 text-center flex-shrink-0">
                   {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span className="text-white/25 font-mono">{i + 1}</span>}
                 </span>
-                <span className="text-white/80 text-sm truncate max-w-[120px]">{entry.name}</span>
+                <span className="text-white/80 text-sm break-words min-w-0">{entry.name}</span>
               </div>
-              <span className="text-white font-bold text-sm font-mono">{entry.score}</span>
+              <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                <span className="text-white font-bold text-sm font-mono">{entry.score.toLocaleString()}</span>
+                <span className="text-white/35 text-[9px] whitespace-nowrap">
+                  {getTier(entry.score).title} {getTier(entry.score).emoji}
+                </span>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -192,8 +196,7 @@ export default function BurbuTap({ onClose }: Props) {
   const score20sCapturedRef    = useRef(false);
   const endComboRef            = useRef(0);
 
-  // @ts-expect-error - State kept for potential future use
-  const [earnedBadges, setEarnedBadges] = useState<BadgeResult[]>([]);
+  const [_earnedBadges, setEarnedBadges] = useState<BadgeResult[]>([]);
   const [shakeKey, setShakeKey]         = useState(0);
   const [shakeProfile, setShakeProfile] = useState<'soft' | 'hard' | 'bomb'>('soft');
   const [particles, setParticles]       = useState<Particle[]>([]);
@@ -241,6 +244,18 @@ export default function BurbuTap({ onClose }: Props) {
     setBubbles([]);
     localStorage.setItem(PLAYED_KEY, '1');
     localStorage.setItem(SCORE_KEY, String(s));
+    endComboRef.current = comboRef.current;
+    const badgeStats: BadgeStats = {
+      bombsHit:        bombsHitRef.current,
+      iceUsed:         iceUsedRef.current,
+      goldHit:         goldHitRef.current,
+      frenzyActivated: frenzyTriggeredRef.current,
+      missCount:       missCountRef.current,
+      maxCombo:        maxComboRef.current,
+      scoreAt20s:      scoreAt20sRef.current,
+      endCombo:        comboRef.current,
+    };
+    setEarnedBadges(getBadges(badgeStats));
     // Redundant but safe: ensure device is recorded even if startGame call failed
     registerDevice(getDeviceId()).catch(console.error);
     setPhase('end');
