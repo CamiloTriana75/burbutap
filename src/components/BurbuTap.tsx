@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Share2, RefreshCw, Flame } from 'lucide-react';
 import { addScore, registerDevice, getDeviceId } from '../utils/leaderboard';
+// @ts-expect-error - Imports kept for potential future use
+import { getTier, getBadges } from '../utils/tiers';
+import type { BadgeResult } from '../utils/tiers';
 import type { ScoreEntry } from '../utils/leaderboard';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { playPop, playComboUp, playMiss, playStart, playEnd, playTick, playGold, playBomb, playIce, playFrenzy, startMusic, stopMusic, setMusicBPM } from '../utils/sounds';
@@ -179,7 +182,18 @@ export default function BurbuTap({ onClose }: Props) {
   const frenzyRef                     = useRef(false);
   const frenzyTimeoutRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frenzyTriggeredRef            = useRef(false);
+  // Badge tracking
+  const bombsHitRef            = useRef(0);
+  const iceUsedRef             = useRef(0);
+  const goldHitRef             = useRef(0);
+  const missCountRef           = useRef(0);
+  const maxComboRef            = useRef(0);
+  const scoreAt20sRef          = useRef(0);
+  const score20sCapturedRef    = useRef(false);
+  const endComboRef            = useRef(0);
 
+  // @ts-expect-error - State kept for potential future use
+  const [earnedBadges, setEarnedBadges] = useState<BadgeResult[]>([]);
   const [shakeKey, setShakeKey]         = useState(0);
   const [shakeProfile, setShakeProfile] = useState<'soft' | 'hard' | 'bomb'>('soft');
   const [particles, setParticles]       = useState<Particle[]>([]);
@@ -245,6 +259,15 @@ export default function BurbuTap({ onClose }: Props) {
     setFrozen(false);
     frenzyRef.current          = false;
     frenzyTriggeredRef.current = false;
+    bombsHitRef.current         = 0;
+    iceUsedRef.current          = 0;
+    goldHitRef.current          = 0;
+    missCountRef.current        = 0;
+    maxComboRef.current         = 0;
+    scoreAt20sRef.current       = 0;
+    score20sCapturedRef.current = false;
+    endComboRef.current         = 0;
+    setEarnedBadges([]);
     setFrenzy(false);
     setScore(0); setCombo(0); setBubbles([]);
     setTapEffects([]); setMissEffects([]); setScorePopups([]); setParticles([]);
@@ -307,6 +330,7 @@ export default function BurbuTap({ onClose }: Props) {
         // Bombs expiring naturally are a success (player avoided them) — no penalty
         const missedNonBomb = expired.filter(b => b.type !== 'bomb');
         if (missedNonBomb.length > 0) {
+          missCountRef.current += missedNonBomb.length;
           const had = comboRef.current;
           comboRef.current = 0;
           setCombo(0);
@@ -330,6 +354,10 @@ export default function BurbuTap({ onClose }: Props) {
           setTimeLeft(remaining);
         }
         const elapsedMs = GAME_DURATION - remaining;
+        if (elapsedMs >= 20_000 && !score20sCapturedRef.current) {
+          scoreAt20sRef.current       = scoreRef.current;
+          score20sCapturedRef.current = true;
+        }
         const targetBPM = elapsedMs < 15_000 ? 135
                         : elapsedMs < 35_000 ? Math.round(135 + ((elapsedMs - 15_000) / 20_000) * 25)
                         : 160;
@@ -384,6 +412,7 @@ export default function BurbuTap({ onClose }: Props) {
     if (bubble.type === 'bomb') {
       setBubbles(prev => prev.filter(b => b.id !== bubble.id));
       startTimeRef.current -= 5_000;
+      bombsHitRef.current++;
       const had = comboRef.current;
       comboRef.current = 0;
       setCombo(0);
@@ -404,6 +433,7 @@ export default function BurbuTap({ onClose }: Props) {
     if (bubble.type === 'ice') {
       setBubbles(prev => prev.filter(b => b.id !== bubble.id));
       frozenAtRef.current  = Date.now();
+      iceUsedRef.current++;
       frozenRef.current    = true;
       setFrozen(true);
       playIce();
@@ -433,6 +463,8 @@ export default function BurbuTap({ onClose }: Props) {
 
     comboRef.current  = newCombo;
     scoreRef.current += pts;
+    maxComboRef.current = Math.max(maxComboRef.current, newCombo);
+    if (bubble.type === 'gold') goldHitRef.current++;
     setScore(s => s + pts);
     setCombo(newCombo);
     if (newCombo >= 10) triggerShake('hard'); else if (newCombo >= 5) triggerShake('soft');
@@ -475,6 +507,7 @@ export default function BurbuTap({ onClose }: Props) {
   // ── Wrong (background) tap ────────────────────────────────────────────────
   function handleBgTap(e: React.PointerEvent) {
     if (phase !== 'playing') return;
+    missCountRef.current++;
     const tx = (e.clientX / window.innerWidth)  * 100;
     const ty = (e.clientY / window.innerHeight) * 100;
     const had = comboRef.current;
