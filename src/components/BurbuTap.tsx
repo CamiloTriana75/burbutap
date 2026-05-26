@@ -128,12 +128,12 @@ function LeaderboardPanel({ entries, loading, error, className }: {
                 </span>
                 <span className="text-white/80 text-sm break-words min-w-0">{entry.name}</span>
               </div>
+              {(() => { const t = getTier(entry.score); return (
               <div className="flex flex-col items-end flex-shrink-0 ml-2">
                 <span className="text-white font-bold text-sm font-mono">{entry.score.toLocaleString()}</span>
-                <span className="text-white/35 text-[9px] whitespace-nowrap">
-                  {getTier(entry.score).title} {getTier(entry.score).emoji}
-                </span>
+                <span className="text-white/35 text-[9px] whitespace-nowrap">{t.title} {t.emoji}</span>
               </div>
+              ); })()}
             </motion.div>
           ))}
         </div>
