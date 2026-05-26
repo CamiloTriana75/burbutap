@@ -196,7 +196,7 @@ export default function BurbuTap({ onClose }: Props) {
   const score20sCapturedRef    = useRef(false);
   const endComboRef            = useRef(0);
 
-  const [_earnedBadges, setEarnedBadges] = useState<BadgeResult[]>([]);
+  const [earnedBadges, setEarnedBadges] = useState<BadgeResult[]>([]);
   const [shakeKey, setShakeKey]         = useState(0);
   const [shakeProfile, setShakeProfile] = useState<'soft' | 'hard' | 'bomb'>('soft');
   const [particles, setParticles]       = useState<Particle[]>([]);
@@ -1195,7 +1195,15 @@ export default function BurbuTap({ onClose }: Props) {
                 >
                   {finalScore}
                 </motion.p>
-                <p className="text-white/40 text-base mb-3">puntos</p>
+                <p className="text-white/40 text-base mb-1">puntos</p>
+                <motion.p
+                  className="text-white/50 text-sm mb-3 font-medium"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {getTier(finalScore).title} {getTier(finalScore).emoji}
+                </motion.p>
 
                 {/* Reward banner */}
                 {finalScore >= REWARD_THRESHOLD && (
@@ -1233,6 +1241,36 @@ export default function BurbuTap({ onClose }: Props) {
             )}
 
             {finalScore === 0 && <p className="text-white/35 text-sm mt-6 mb-4 font-semibold">Tabla de posiciones</p>}
+
+            {/* Earned badges */}
+            {earnedBadges.length > 0 && (
+              <motion.div
+                className="w-full max-w-sm mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28, duration: 0.4 }}
+              >
+                <p className="text-white/25 text-[9px] uppercase tracking-widest text-center mb-2">Tus logros</p>
+                <div className="space-y-2">
+                  {earnedBadges.map((badge, i) => (
+                    <motion.div
+                      key={badge.name}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + i * 0.12, duration: 0.32 }}
+                    >
+                      <span className="text-2xl flex-shrink-0">{badge.emoji}</span>
+                      <div className="text-left">
+                        <p className="text-white/90 text-sm font-bold leading-tight">{badge.name}</p>
+                        <p className="text-white/40 text-xs">{badge.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Fun fact */}
             {finalScore > 0 && (
