@@ -227,9 +227,9 @@ export default function LandingPage({ onPlay, hasPlayed }: Props) {
                       <AnimatedScore value={entries[0].score} />
                     </p>
                     <p className="text-white/30 text-[9px]">pts</p>
-                    <p className="text-white/40 text-[9px] mt-0.5">
-                      {getTier(entries[0].score).title} {getTier(entries[0].score).emoji}
-                    </p>
+                    {(() => { const t = getTier(entries[0].score); return (
+                      <p className="text-white/40 text-[9px] mt-0.5">{t.title} {t.emoji}</p>
+                    ); })()}
                   </div>
                 </div>
 
@@ -271,7 +271,9 @@ export default function LandingPage({ onPlay, hasPlayed }: Props) {
                     </div>
                     <div className="text-right flex-shrink-0 ml-3">
                       <p className="text-white/80 font-bold text-sm font-mono tabular-nums">{entry.score.toLocaleString()}</p>
-                      <p className="text-white/35 text-[9px]">{getTier(entry.score).title} {getTier(entry.score).emoji}</p>
+                      {(() => { const t = getTier(entry.score); return (
+                        <p className="text-white/35 text-[9px]">{t.title} {t.emoji}</p>
+                      ); })()}
                     </div>
                   </motion.div>
                 ))}
