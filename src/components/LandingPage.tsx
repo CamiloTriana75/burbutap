@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Trophy, Flame, Zap, Timer, RotateCcw, Users } from 'lucide-react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
+import { getTier } from '../utils/tiers';
 
 const REWARD_THRESHOLD = 7_500;
 
@@ -226,6 +227,9 @@ export default function LandingPage({ onPlay, hasPlayed }: Props) {
                       <AnimatedScore value={entries[0].score} />
                     </p>
                     <p className="text-white/30 text-[9px]">pts</p>
+                    <p className="text-white/40 text-[9px] mt-0.5">
+                      {getTier(entries[0].score).title} {getTier(entries[0].score).emoji}
+                    </p>
                   </div>
                 </div>
 
@@ -265,7 +269,10 @@ export default function LandingPage({ onPlay, hasPlayed }: Props) {
                       </span>
                       <span className="text-white/75 text-sm break-words text-left">{entry.name}</span>
                     </div>
-                    <span className="text-white/80 font-bold text-sm font-mono tabular-nums flex-shrink-0 ml-3">{entry.score.toLocaleString()}</span>
+                    <div className="text-right flex-shrink-0 ml-3">
+                      <p className="text-white/80 font-bold text-sm font-mono tabular-nums">{entry.score.toLocaleString()}</p>
+                      <p className="text-white/35 text-[9px]">{getTier(entry.score).title} {getTier(entry.score).emoji}</p>
+                    </div>
                   </motion.div>
                 ))}
               </div>
