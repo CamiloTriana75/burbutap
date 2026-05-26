@@ -227,7 +227,8 @@ export default function BurbuTap({ onClose }: Props) {
     setBubbles([]);
     localStorage.setItem(PLAYED_KEY, '1');
     localStorage.setItem(SCORE_KEY, String(s));
-    void registerDevice(getDeviceId());
+    // Redundant but safe: ensure device is recorded even if startGame call failed
+    registerDevice(getDeviceId()).catch(console.error);
     setPhase('end');
   }, []);
 
@@ -252,6 +253,9 @@ export default function BurbuTap({ onClose }: Props) {
     startTimeRef.current = Date.now();
     setPhase('playing');
     startMusic();
+    // Register device as soon as the game starts so the record exists
+    // even if the player closes the app before the timer runs out
+    registerDevice(getDeviceId()).catch(console.error);
 
     // Dynamic spawn: speed increases quadratically over 60 s
     function scheduleSpawn() {
