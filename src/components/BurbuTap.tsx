@@ -17,12 +17,20 @@ const PLAYED_KEY        = 'burbutap_played';
 const SCORE_KEY         = 'burbutap_score';
 
 const FUN_FACTS = [
-  'Postobón fue fundada en 1904 en Medellín — más de 120 años refrescando Colombia.',
-  'Postobón produce más de 2 millones de litros de bebidas al día en sus plantas.',
-  'La empresa exporta sus productos a más de 15 países de América Latina.',
-  'Postobón lidera el mercado colombiano de bebidas con más del 40% de participación.',
-  'En 2024, Postobón reportó crecimiento sostenido en ventas nacionales e internacionales.',
-  'El portafolio de Postobón incluye más de 200 referencias de bebidas.',
+  'Postobón fue fundada en 1904 — el mismo año en que nació La Colombiana, su bebida más icónica.',
+  'El nombre "Postobón" viene de sus fundadores: Valerio Tobón y Gabriel Posada, en Medellín.',
+  'Postobón produce más de 2 millones de litros de bebidas cada día en sus plantas colombianas.',
+  'Con más del 40% del mercado, Postobón es la empresa de bebidas líder en Colombia.',
+  'El portafolio de Postobón supera las 200 referencias — jugos, aguas, gaseosas, energizantes y más.',
+  'Postobón exporta sus productos a más de 15 países de América Latina y el Caribe.',
+  'En 2024, Postobón reforzó su estrategia de sostenibilidad con metas de reducción de huella de carbono.',
+  'La empresa ha invertido en transformación digital para mejorar la experiencia de compra en tiendas y apps.',
+  'Según Legiscomex, Postobón se mantiene entre los líderes en rankings de comercio de bebidas en Colombia.',
+  'Postobón apoya el desarrollo económico regional — es uno de los mayores empleadores industriales del país.',
+  'La CEPAL destaca al sector de bebidas colombiano como uno de los más productivos de América Latina.',
+  'Postobón ha modernizado su cadena de distribución para llegar a más de 500 municipios en Colombia.',
+  'La Colombiana es la gaseosa de cola más vendida en Colombia, por encima de marcas multinacionales.',
+  'Postobón destina parte de sus utilidades a programas sociales en las comunidades donde opera.',
 ];
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
